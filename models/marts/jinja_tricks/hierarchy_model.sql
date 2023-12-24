@@ -32,11 +32,14 @@ WITH RECURSIVE
             MANAGER_ID,
             START_DATE,
             END_DATE,
+            -- loop through the layers and construct the columns needed based on the number of layers retrieved from the max_layer macro
             {%- for i in range(1, max_layer + 1) %}
-                CASE WHEN LAYER = {{ i }} THEN ID END AS LAYER_{{ i }}_ID,
-                CASE WHEN LAYER = {{ i }} THEN NAME END AS LAYER_{{ i }}_NAME
-                {%- if not loop.last %},{%- endif %}
+            CASE WHEN LAYER = {{ i }} THEN ID END AS LAYER_{{ i }}_ID,
+            CASE WHEN LAYER = {{ i }} THEN NAME END AS LAYER_{{ i }}_NAME
+            {%- if not loop.last %},{%- endif %}
             {%- endfor %}
+            -- in the line prior to the endfor, add a comma until the last iteration in the loop
+            -- the dash after % removes white space, putting the comma on the same line as the row above
         FROM {{ ref("stg_gsheets_hierarchy_table") }}
         WHERE LAYER = 1
         UNION ALL
@@ -50,15 +53,15 @@ WITH RECURSIVE
             sh.START_DATE,
             sh.END_DATE,
             {%- for i in range(1, max_layer + 1) %}
-                COALESCE(
-                    shc.LAYER_{{ i }}_ID,
-                    CASE WHEN sh.LAYER = {{ i }} THEN sh.ID END
-                ),
-                COALESCE(
-                    shc.LAYER_{{ i }}_NAME,
-                    CASE WHEN sh.LAYER = {{ i }} THEN sh.NAME END
-                )
-                {%- if not loop.last %},{%- endif %}
+            COALESCE(
+                shc.LAYER_{{ i }}_ID,
+                CASE WHEN sh.LAYER = {{ i }} THEN sh.ID END
+            ),
+            COALESCE(
+                shc.LAYER_{{ i }}_NAME,
+                CASE WHEN sh.LAYER = {{ i }} THEN sh.NAME END
+            )
+            {%- if not loop.last %},{%- endif %}
             {%- endfor %}
         FROM {{ ref("stg_gsheets_hierarchy_table") }} sh
         JOIN
@@ -71,48 +74,50 @@ WITH RECURSIVE
     organization_table AS (
         SELECT
             {%- for i in range(max_layer, 0, -1) %}
-                MAX(LAYER_{{ i }}_ID) OVER (
-                    PARTITION BY LAYER_{{ max_layer }}_ID, START_DATE, END_DATE
-                ) AS {{ layer_titles[i] }}_ID,
-                MAX(LAYER_{{ i }}_ID) OVER (
-                    PARTITION BY LAYER_{{ max_layer }}_ID, START_DATE, END_DATE
-                ) AS {{ layer_titles[i] }}_NAME
-                {%- if not loop.last %},{% endif %}
-
-                {% if loop.first %}
+            MAX(LAYER_{{ i }}_ID) OVER (
+                PARTITION BY LAYER_{{ max_layer }}_ID, START_DATE, END_DATE
+            ) AS {{ layer_titles[i] }}_ID,
+            MAX(LAYER_{{ i }}_ID) OVER (
+                PARTITION BY LAYER_{{ max_layer }}_ID, START_DATE, END_DATE
+            ) AS {{ layer_titles[i] }}_NAME
+            {%- if not loop.last %},{%- endif -%}
+            {%- if loop.first %}
+            MAX(START_DATE) OVER (
+                PARTITION BY LAYER_{{ i }}_ID, START_DATE, END_DATE
+            ) AS START_DATE,
+            MAX(END_DATE) OVER (
+                PARTITION BY LAYER_{{ i }}_ID, START_DATE, END_DATE
+            ) AS END_DATE,
+            CASE
+                WHEN
                     MAX(START_DATE) OVER (
                         PARTITION BY LAYER_{{ i }}_ID, START_DATE, END_DATE
-                    ) AS START_DATE,
-                    MAX(END_DATE) OVER (
+                    )
+                    <= CURRENT_DATE
+                    AND MAX(END_DATE) OVER (
                         PARTITION BY LAYER_{{ i }}_ID, START_DATE, END_DATE
-                    ) AS END_DATE,
-                    CASE
-                        WHEN
-                            MAX(START_DATE) OVER (
-                                PARTITION BY LAYER_{{ i }}_ID, START_DATE, END_DATE
-                            )
-                            <= CURRENT_DATE
-                            AND MAX(END_DATE) OVER (
-                                PARTITION BY LAYER_{{ i }}_ID, START_DATE, END_DATE
-                            )
-                            >= CURRENT_DATE
-                        THEN 1
-                        ELSE 0
-                    END AS CURRENT_RELATIONSHIP_FLAG,
-                {%- endif %}
-            {%- endfor %}
+                    )
+                    >= CURRENT_DATE
+                THEN 1
+                ELSE 0
+            END AS CURRENT_RELATIONSHIP_FLAG,
+            {%- endif -%}
+            {%- endfor -%}
         FROM hierarchy_cte
         ORDER BY {{ layer_titles[max_layer] }}_NAME ASC, START_DATE ASC
     )
 
 select
     {{ layer_titles[max_layer] }}_ID,
+    -- this allows us to alter the titles in the underlying raw data without having to update this model
     {{ layer_titles[max_layer] }}_NAME,
     START_DATE,
     END_DATE,
     CURRENT_RELATIONSHIP_FLAG,
     {%- for i in range(max_layer - 1, 0, -1) %}
-        {{ layer_titles[i] }}_ID, {{ layer_titles[i] }}_NAME{%- if not loop.last %},{%- endif %}
+    {{ layer_titles[i] }}_ID,
+    {{ layer_titles[i] }}_NAME
+    {%- if not loop.last %},{%- endif %}
     {%- endfor %}
 FROM organization_table
 WHERE {{ layer_titles[max_layer] }}_ID IS NOT null
