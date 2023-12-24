@@ -1,0 +1,5 @@
+version: 2
+
+models:
+    - name: hierarchy_model
+      description: A model that generates columns from raw data using loops

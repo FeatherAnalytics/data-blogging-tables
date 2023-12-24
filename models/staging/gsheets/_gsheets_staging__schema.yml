@@ -1,7 +1,7 @@
 version: 2
 
 models:
-    - name: stg_gsheets_hierarchy_table.sql
+    - name: stg_gsheets_hierarchy_table
       description: "A GSheet hosting an example dataset for creating a hierarchy model"
       columns:
         - name: _row
