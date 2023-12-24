@@ -1,0 +1,35 @@
+
+version: 2
+
+models:
+    - name: stg_hierarchy_table
+      description: "A GSheet hosting an example dataset for creating a hierarchy model"
+      columns:
+        - name: _row
+          description: Row number
+
+        - name: _fivetran_synced
+          description: The last sync time of the Fivetran connector
+
+        - name: id
+          description: The unique ID of the person in the row
+          tests:
+            - not_null
+
+        - name: name
+          description: The name of the person
+
+        - name: title
+          description: The title of the person within the hierarchy
+
+        - name: layer
+          description: The layer number of the person in the hierarchy, with 1 being the highest and increase in number you go down the chain of command
+
+        - name: manager_id
+          description: The unique ID of the direct manager over the person in the row
+
+        - name: start_date
+          description: The first date of the reporting relationship
+
+        - name: end_date
+          description: The fina date of the reporting relationship
