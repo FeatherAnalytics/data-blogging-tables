@@ -1,0 +1,1 @@
+select * from {{ source("gsheets","hierarchy_table") }}
