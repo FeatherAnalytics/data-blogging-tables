@@ -102,7 +102,7 @@ WITH RECURSIVE
                 ELSE 0
             END AS CURRENT_RELATIONSHIP_FLAG,
             {%- endif -%}
-            {%- endfor -%}
+            {%- endfor %}
         FROM hierarchy_cte
         ORDER BY {{ layer_titles[max_layer] }}_NAME ASC, START_DATE ASC
     )
