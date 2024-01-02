@@ -26,7 +26,8 @@ WITH RECURSIVE
             CASE WHEN LAYER = 6 THEN NAME END AS LAYER_6_NAME
             -- in the line prior to the endfor, add a comma until the last iteration in the loop
             -- the dash after % removes white space, putting the comma on the same line as the row above
-        FROM {{ ref("stg_gsheets_hierarchy_table") }}WHERE LAYER = 1
+        FROM {{ ref("stg_gsheets_hierarchy_table") }}
+        WHERE LAYER = 1
         UNION ALL
         -- Recursive: select subordinates of the previous level
         SELECT
@@ -97,10 +98,10 @@ WITH RECURSIVE
         SELECT
             MAX(LAYER_6_ID) OVER (
                 PARTITION BY LAYER_6_ID, START_DATE, END_DATE
-            ) AS NOVICE_ID,
+            ) AS WATCHER_ID,
             MAX(LAYER_6_ID) OVER (
                 PARTITION BY LAYER_6_ID, START_DATE, END_DATE
-            ) AS NOVICE_NAME,
+            ) AS WATCHER_NAME,
             MAX(START_DATE) OVER (
                 PARTITION BY LAYER_6_ID, START_DATE, END_DATE
             ) AS START_DATE,
@@ -134,29 +135,30 @@ WITH RECURSIVE
             ) AS FIRST_CAPTAIN_NAME,
             MAX(LAYER_3_ID) OVER (
                 PARTITION BY LAYER_6_ID, START_DATE, END_DATE
-            ) AS LIEUTENANT_ID,
+            ) AS BRIGHTCANDLE_ID,
             MAX(LAYER_3_ID) OVER (
                 PARTITION BY LAYER_6_ID, START_DATE, END_DATE
-            ) AS LIEUTENANT_NAME,
+            ) AS BRIGHTCANDLE_NAME,
             MAX(LAYER_2_ID) OVER (
                 PARTITION BY LAYER_6_ID, START_DATE, END_DATE
-            ) AS SECOND_COMMANDER_ID,
+            ) AS WISE_OWL_ID,
             MAX(LAYER_2_ID) OVER (
                 PARTITION BY LAYER_6_ID, START_DATE, END_DATE
-            ) AS SECOND_COMMANDER_NAME,
+            ) AS WISE_OWL_NAME,
             MAX(LAYER_1_ID) OVER (
                 PARTITION BY LAYER_6_ID, START_DATE, END_DATE
-            ) AS WAR_CHIEF_ID,
+            ) AS HIGH_HARPER_ID,
             MAX(LAYER_1_ID) OVER (
                 PARTITION BY LAYER_6_ID, START_DATE, END_DATE
-            ) AS WAR_CHIEF_NAMEFROM hierarchy_cte
-        ORDER BY NOVICE_NAME ASC, START_DATE ASC
+            ) AS HIGH_HARPER_NAME
+        FROM hierarchy_cte
+        ORDER BY WATCHER_NAME ASC, START_DATE ASC
     )
 
 select
-    NOVICE_ID,
+    WATCHER_ID,
     -- this allows us to alter the titles in the underlying raw data without having to update this model
-    NOVICE_NAME,
+    WATCHER_NAME,
     START_DATE,
     END_DATE,
     CURRENT_RELATIONSHIP_FLAG,
@@ -164,12 +166,12 @@ select
     SERGEANT_IN_COMMAND_NAME,
     FIRST_CAPTAIN_ID,
     FIRST_CAPTAIN_NAME,
-    LIEUTENANT_ID,
-    LIEUTENANT_NAME,
-    SECOND_COMMANDER_ID,
-    SECOND_COMMANDER_NAME,
-    WAR_CHIEF_ID,
-    WAR_CHIEF_NAME
+    BRIGHTCANDLE_ID,
+    BRIGHTCANDLE_NAME,
+    WISE_OWL_ID,
+    WISE_OWL_NAME,
+    HIGH_HARPER_ID,
+    HIGH_HARPER_NAME
 FROM organization_table
-WHERE NOVICE_ID IS NOT null
-ORDER BY NOVICE_NAME ASC, START_DATE ASC
+WHERE WATCHER_ID IS NOT null
+ORDER BY WATCHER_NAME ASC, START_DATE ASC

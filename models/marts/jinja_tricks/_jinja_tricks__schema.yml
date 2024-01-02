@@ -2,4 +2,4 @@ version: 2
 
 models:
     - name: hierarchy_model
-      description: A model that generates columns from raw data using loops
+      description: A model that generates columns from raw data using loops. The Titles come from The Harpers organization from Dungeons & Dragons (https://www.worldanvil.com/w/d26d-forgotten-realms-baklor/a/the-harpers-organization)
