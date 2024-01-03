@@ -16,8 +16,7 @@ SELECT DISTINCT LAYER, UPPER(REPLACE(TRIM(TITLE), ' ', '_')) AS TITLE FROM {{ re
 SELECT MAX(LAYER) FROM {{ ref("stg_gsheets_hierarchy_table") }}
 {%- endset -%}
 
--- sets the max_layer to the highest value in the raw data, which is associated with
--- Sales Reps
+-- sets the max_layer to the highest value in the raw data, which is associated with Watchers
 {%- set max_layer = dbt_utils.get_single_value(sql_statement, default="0") | int -%}
 
 -- this recursive CTE grabs the data and pairs each employee with their direct manager
