@@ -1,5 +1,4 @@
--- pulls the layers and titles in the raw data-- this sets the dictionary that will help fill the query-- pulls the highest layer from the raw data for the subsequent loops-- sets the max_layer to the highest value in the raw data, which is associated with
--- Sales Reps-- this recursive CTE grabs the data and pairs each employee with their direct manager
+-- pulls the layers and titles in the raw data-- this sets the dictionary that will help fill the query-- pulls the highest layer from the raw data for the subsequent loops-- sets the max_layer to the highest value in the raw data, which is associated with Watchers-- this recursive CTE grabs the data and pairs each employee with their direct manager
 WITH RECURSIVE
     hierarchy_cte AS (
         -- Anchor: select the top of the hierarchy
@@ -26,7 +25,7 @@ WITH RECURSIVE
             CASE WHEN LAYER = 6 THEN NAME END AS LAYER_6_NAME
             -- in the line prior to the endfor, add a comma until the last iteration in the loop
             -- the dash after % removes white space, putting the comma on the same line as the row above
-        FROM {{ ref("stg_gsheets_hierarchy_table") }}
+        FROM {{ ref("stg_gsheets_hierarchy_table") }} 
         WHERE LAYER = 1
         UNION ALL
         -- Recursive: select subordinates of the previous level
@@ -99,7 +98,7 @@ WITH RECURSIVE
             MAX(LAYER_6_ID) OVER (
                 PARTITION BY LAYER_6_ID, START_DATE, END_DATE
             ) AS WATCHER_ID,
-            MAX(LAYER_6_ID) OVER (
+            MAX(LAYER_6_NAME) OVER (
                 PARTITION BY LAYER_6_ID, START_DATE, END_DATE
             ) AS WATCHER_NAME,
             MAX(START_DATE) OVER (
@@ -118,37 +117,37 @@ WITH RECURSIVE
                         PARTITION BY LAYER_6_ID, START_DATE, END_DATE
                     )
                     >= CURRENT_DATE
-                THEN 1
-                ELSE 0
+                THEN TRUE
+                ELSE FALSE
             END AS CURRENT_RELATIONSHIP_FLAG,
             MAX(LAYER_5_ID) OVER (
                 PARTITION BY LAYER_6_ID, START_DATE, END_DATE
             ) AS SERGEANT_IN_COMMAND_ID,
-            MAX(LAYER_5_ID) OVER (
+            MAX(LAYER_5_NAME) OVER (
                 PARTITION BY LAYER_6_ID, START_DATE, END_DATE
             ) AS SERGEANT_IN_COMMAND_NAME,
             MAX(LAYER_4_ID) OVER (
                 PARTITION BY LAYER_6_ID, START_DATE, END_DATE
             ) AS FIRST_CAPTAIN_ID,
-            MAX(LAYER_4_ID) OVER (
+            MAX(LAYER_4_NAME) OVER (
                 PARTITION BY LAYER_6_ID, START_DATE, END_DATE
             ) AS FIRST_CAPTAIN_NAME,
             MAX(LAYER_3_ID) OVER (
                 PARTITION BY LAYER_6_ID, START_DATE, END_DATE
             ) AS BRIGHTCANDLE_ID,
-            MAX(LAYER_3_ID) OVER (
+            MAX(LAYER_3_NAME) OVER (
                 PARTITION BY LAYER_6_ID, START_DATE, END_DATE
             ) AS BRIGHTCANDLE_NAME,
             MAX(LAYER_2_ID) OVER (
                 PARTITION BY LAYER_6_ID, START_DATE, END_DATE
             ) AS WISE_OWL_ID,
-            MAX(LAYER_2_ID) OVER (
+            MAX(LAYER_2_NAME) OVER (
                 PARTITION BY LAYER_6_ID, START_DATE, END_DATE
             ) AS WISE_OWL_NAME,
             MAX(LAYER_1_ID) OVER (
                 PARTITION BY LAYER_6_ID, START_DATE, END_DATE
             ) AS HIGH_HARPER_ID,
-            MAX(LAYER_1_ID) OVER (
+            MAX(LAYER_1_NAME) OVER (
                 PARTITION BY LAYER_6_ID, START_DATE, END_DATE
             ) AS HIGH_HARPER_NAME
         FROM hierarchy_cte
