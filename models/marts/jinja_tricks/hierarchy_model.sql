@@ -97,8 +97,8 @@ WITH RECURSIVE
                         PARTITION BY LAYER_{{ i }}_ID, START_DATE, END_DATE
                     )
                     >= CURRENT_DATE
-                THEN 1
-                ELSE 0
+                THEN TRUE
+                ELSE FALSE
             END AS CURRENT_RELATIONSHIP_FLAG,
             {%- endif -%}
             {%- endfor %}
