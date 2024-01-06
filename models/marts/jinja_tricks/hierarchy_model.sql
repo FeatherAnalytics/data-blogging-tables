@@ -76,7 +76,7 @@ WITH RECURSIVE
             MAX(LAYER_{{ i }}_ID) OVER (
                 PARTITION BY LAYER_{{ max_layer }}_ID, START_DATE, END_DATE
             ) AS {{ layer_titles[i] }}_ID,
-            MAX(LAYER_{{ i }}_ID) OVER (
+            MAX(LAYER_{{ i }}_NAME) OVER (
                 PARTITION BY LAYER_{{ max_layer }}_ID, START_DATE, END_DATE
             ) AS {{ layer_titles[i] }}_NAME
             {%- if not loop.last %},{%- endif -%}
