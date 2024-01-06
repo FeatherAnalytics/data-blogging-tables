@@ -36,4 +36,4 @@ sources:
             description: The first date of the reporting relationship
 
           - name: end_date
-            description: The fina date of the reporting relationship
+            description: The final date of the reporting relationship
